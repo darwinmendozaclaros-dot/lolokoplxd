@@ -1,0 +1,83 @@
+name: build
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Localizar el proyecto
+        shell: pwsh
+        run: |
+          $cm = Get-ChildItem -Path . -Recurse -Filter CMakeLists.txt -File |
+                Where-Object { (Get-Content $_.FullName -Raw) -match 'project\(CyberNemesis' } |
+                Select-Object -First 1
+          if (-not $cm) {
+            Write-Host "No se encontro el CMakeLists.txt de CyberNemesis. Estructura del repositorio:"
+            Get-ChildItem -Path . -Recurse -Depth 2 | Select-Object -ExpandProperty FullName
+            throw "Falta CMakeLists.txt en el repositorio"
+          }
+          Add-Content -Path $env:GITHUB_ENV -Value "PROJ=$($cm.DirectoryName)"
+          Write-Host "Proyecto en: $($cm.DirectoryName)"
+      - name: Configurar
+        shell: pwsh
+        run: cmake -S "$env:PROJ" -B "$env:PROJ/build" -A x64
+      - name: Compilar
+        shell: pwsh
+        run: cmake --build "$env:PROJ/build" --config Release
+      - name: Empaquetar
+        shell: pwsh
+        run: cmake --build "$env:PROJ/build" --config Release --target package_game
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CyberNemesis-windows-x64
+          path: ${{ env.PROJ }}/build/dist/CyberNemesis-windows-x64.zip
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Localizar el proyecto
+        run: |
+          CM=$(grep -rl --include=CMakeLists.txt 'project(CyberNemesis' . | head -n 1)
+          if [ -z "$CM" ]; then
+            echo "No se encontro el CMakeLists.txt de CyberNemesis. Estructura del repositorio:"
+            find . -maxdepth 3 -not -path './.git/*'
+            exit 1
+          fi
+          echo "PROJ=$(cd "$(dirname "$CM")" && pwd)" >> "$GITHUB_ENV"
+          echo "Proyecto en: $(dirname "$CM")"
+      - name: Dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git pkg-config libwayland-dev wayland-protocols \
+            libxkbcommon-dev libegl1-mesa-dev libgl1-mesa-dev libx11-dev libxrandr-dev libxi-dev \
+            libxcursor-dev libxinerama-dev libasound2-dev
+      - name: Compilar
+        run: |
+          cmake -S "$PROJ" -B "$PROJ/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$PROJ/build" -j
+          cmake --build "$PROJ/build" --target package_game
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CyberNemesis-linux-x64
+          path: ${{ env.PROJ }}/build/dist/CyberNemesis-linux-x64.tar.gz
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ windows, linux ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
