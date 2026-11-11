@@ -1,0 +1,32 @@
+CYBER-NEMESIS : Adaptive Boss Protocol
+======================================
+
+COMO JUGAR
+  1. Descomprime este archivo (clic derecho > "Extraer todo").
+  2. Abre CyberNemesis.exe  (doble clic). No hay que instalar nada.
+
+REQUISITOS
+  - Windows 10 u 11 (64 bits) con una tarjeta grafica compatible con OpenGL 3.3
+    (cualquier equipo de los ultimos 10 anos). Si falla al abrir, actualiza los
+    drivers de video.
+
+AVISO DE WINDOWS ("Windows protegio su PC")
+  El juego no esta firmado digitalmente (la firma cuesta dinero), por eso
+  SmartScreen o tu antivirus pueden avisar la primera vez. Pulsa
+  "Mas informacion" y luego "Ejecutar de todas formas".
+
+CONTROLES
+  A/D mover | W o Espacio saltar (doble salto) | Shift o L dash | S bajar de plataforma
+  J o clic derecho: aplastar (en el aire: picado) | K o clic izquierdo: disparar (mouse apunta)
+  P pausa | M musica | F10 efectos de pantalla | F11 pantalla completa | ESC volver al menu
+
+FASE FINAL
+  Al vencer a la ultima generacion del Androide aparece el Serafin (forma alada).
+  Esquiva sus balas: Shift = dash invulnerable, J = borra las balas cercanas.
+
+PARTIDAS GUARDADAS
+  El Heroe recuerda lo que aprendio entre sesiones. Se guarda en:
+    %APPDATA%\CyberNemesis\brain.data
+  Para reiniciar su memoria: Menu > "Borrar memoria de la IA" (o borra ese archivo).
+
+Hecho con C++ y Raylib.
